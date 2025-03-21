@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2024 (C) Alexey Dynda
+    Copyright 2024 (C) Alexey Dynda
 
     This file is part of Tiny Protocol Library.
 
@@ -26,28 +26,40 @@
     For further information contact via email on github account.
 */
 
-#include "tiny_serial.h"
+#pragma once
 
-#if defined(ARDUINO) || defined(__AVR__)
+#include <zephyr/kernel.h>
 
-#elif defined(__linux__)
+typedef struct k_mutex tiny_mutex_t;
 
-#include "linux/linux_serial.inl"
-
-#elif defined(_WIN32)
-
-#include "win32/win32_serial.inl"
-
-#elif defined(__XTENSA__)
-
-#include "esp32/esp32_serial.inl"
-
-#elif defined(CONFIG_TINYPROTO) && CONFIG_TINYPROTO
-
-#include "zephyr/zephyr_serial.inl"
-
-#else
-
-#include "no_platform/noplatform_serial.inl"
-
+#ifndef CONFIG_ENABLE_CHECKSUM
+#define CONFIG_ENABLE_CHECKSUM
 #endif
+
+#ifndef CONFIG_ENABLE_FCS16
+#define CONFIG_ENABLE_FCS16
+#endif
+
+#ifndef CONFIG_ENABLE_FCS32
+#define CONFIG_ENABLE_FCS32
+#endif
+
+#if IS_ENABLED(CONFIG_MULTITHREADING)
+#define CONFIG_TINYHAL_THREAD_SUPPORT 1
+#else
+#define CONFIG_TINYHAL_THREAD_SUPPORT 0
+#endif
+
+/**
+ * Mutex type used by Tiny Protocol implementation.
+ * The type declaration depends on platform.
+ */
+typedef struct k_mutex tiny_mutex_t;
+
+/**
+ * Event groups type used by Tiny Protocol implementation.
+ * The type declaration depends on platform.
+ */
+typedef struct {
+    struct k_event event;
+} tiny_events_t; 

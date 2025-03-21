@@ -47,14 +47,19 @@ extern "C"
      */
 
 #include <stdint.h>
+#include "tiny_types.h"
 #if defined(ARDUINO) || defined(__AVR__)
 #include "arduino/arduino_serial.h"
 #elif defined(__linux__)
 #include "linux/linux_serial.h"
+#elif defined(__MINGW32__)
+#include "mingw32/mingw32_serial.h"
 #elif defined(_WIN32)
 #include "win32/win32_serial.h"
 #elif defined(__XTENSA__)
 #include "esp32/esp32_serial.h"
+#elif defined(CONFIG_TINYPROTO) && CONFIG_TINYPROTO
+#include "zephyr/zephyr_serial.h"
 #else
 #include "no_platform/noplatform_serial.h"
 #endif

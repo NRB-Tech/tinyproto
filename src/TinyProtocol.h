@@ -49,10 +49,6 @@
 #include <stdint.h>
 #include <limits.h>
 
-#if CONFIG_TINYHAL_THREAD_SUPPORT == 1
-#include <thread>
-#endif
-
 namespace tinyproto
 {
 
@@ -98,8 +94,18 @@ private:
     IPacket *m_queue = nullptr;
     IPacket *m_last = nullptr;
 #if CONFIG_TINYHAL_THREAD_SUPPORT == 1
+#if defined(__ZEPHYR__)
+    // Zephyr thread data structures
+    struct k_thread m_read_thread_data;
+    struct k_thread m_send_thread_data;
+    
+    // Static thread entry point wrappers for Zephyr threads
+    static void runRxThread(void *p_instance, void *p1, void *p2);
+    static void runTxThread(void *p_instance, void *p1, void *p2);
+#else
     std::thread *m_sendThread = nullptr;
     std::thread *m_readThread = nullptr;
+#endif
     uint32_t m_txDelay = 0;
     int m_lostRxFrames = 0;
 #endif

@@ -58,6 +58,8 @@ extern "C"
 #include "win32/win32_hal.h"
 #elif defined(CPU_S32K144HFT0VLLT)
 #include "freertos/freertos_hal.h"
+#elif defined(CONFIG_TINYPROTO) && CONFIG_TINYPROTO
+#include "zephyr/zephyr_hal.h"
 #else
 #info "Platform not supported. Multithread support is disabled"
 #include "no_platform/no_platform_hal.h"

@@ -28,6 +28,17 @@
 
 #include "TinyProtocol.h"
 
+#if CONFIG_TINYHAL_THREAD_SUPPORT == 1
+#include <thread>
+#if defined(__ZEPHYR__)
+#include <zephyr/kernel.h>
+
+// Thread stacks - define at file scope
+K_THREAD_STACK_DEFINE(proto_read_stack, 2048);
+K_THREAD_STACK_DEFINE(proto_send_stack, 2048);
+#endif
+#endif
+
 namespace tinyproto
 {
 
@@ -82,8 +93,24 @@ bool Proto::begin()
     if ( m_multithread )
     {
         m_terminate = false;
+        #if defined(__ZEPHYR__)
+        k_thread_create(&m_read_thread_data, proto_read_stack,
+                        K_THREAD_STACK_SIZEOF(proto_read_stack),
+                        (k_thread_entry_t)&Proto::runRxThread,
+                        this, NULL, NULL,
+                        K_PRIO_PREEMPT(8), 0, K_NO_WAIT);
+        k_thread_name_set(&m_read_thread_data, "proto_rx");
+                        
+        k_thread_create(&m_send_thread_data, proto_send_stack,
+                        K_THREAD_STACK_SIZEOF(proto_send_stack),
+                        (k_thread_entry_t)&Proto::runTxThread,
+                        this, NULL, NULL,
+                        K_PRIO_PREEMPT(8), 0, K_NO_WAIT);
+        k_thread_name_set(&m_send_thread_data, "proto_tx");
+        #else
         m_readThread = new std::thread(&Proto::runRx, this);
         m_sendThread = new std::thread(&Proto::runTx, this);
+        #endif
     }
 #endif
     return true;
@@ -183,6 +210,11 @@ void Proto::end()
     }
     m_terminate = true;
 #if CONFIG_TINYHAL_THREAD_SUPPORT == 1
+#if defined(__ZEPHYR__)
+    // For Zephyr we just need to wait until threads finish
+    // No special cleanup required as threads auto-terminate based on m_terminate flag
+    k_sleep(K_MSEC(100)); // Allow threads time to finish
+#else
     if ( m_sendThread )
     {
         m_sendThread->join();
@@ -193,6 +225,7 @@ void Proto::end()
         m_readThread->join();
         m_readThread = nullptr;
     }
+#endif
 #endif
     m_link->end();
     return;
@@ -290,6 +323,13 @@ void Proto::runTx()
     }
 }
 
+// Static wrapper for Zephyr thread API
+void Proto::runTxThread(void *p_instance, void *p1, void *p2)
+{
+    Proto *instance = reinterpret_cast<Proto*>(p_instance);
+    instance->runTx();
+}
+
 void Proto::runRx()
 {
     if (m_multithread)
@@ -299,6 +339,13 @@ void Proto::runRx()
             getLink().runRx();
         }
     }
+}
+
+// Static wrapper for Zephyr thread API
+void Proto::runRxThread(void *p_instance, void *p1, void *p2)
+{
+    Proto *instance = reinterpret_cast<Proto*>(p_instance);
+    instance->runRx();
 }
 
 void Proto::setTxDelay( uint32_t delay )

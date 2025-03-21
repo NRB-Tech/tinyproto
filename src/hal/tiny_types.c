@@ -47,6 +47,8 @@
 #include "win32/win32_hal.inl"
 #elif defined(CPU_S32K144HFT0VLLT)
 #include "freertos/freertos_hal.inl"
+#elif defined(CONFIG_TINYPROTO) && CONFIG_TINYPROTO
+#include "zephyr/zephyr_hal.inl"
 #else
 #warning "Platform not supported. Multithread support is disabled"
 #include "no_platform/no_platform_hal.inl"

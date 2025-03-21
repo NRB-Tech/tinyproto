@@ -1,0 +1,37 @@
+# Copyright (c) 2024 TinyProto Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config TINYPROTO
+	bool "TinyProto protocol library"
+	select CPP
+	select EVENTS
+	help
+	  This option enables the TinyProto library, a lightweight communication 
+	  protocol library for embedded systems.
+
+if TINYPROTO
+
+choice
+	prompt "Checksum type"
+	default TINYPROTO_ERROR_DET_CHECKSUM
+	help
+	  Select the checksum type to use for TinyProto.
+
+config TINYPROTO_ERROR_DET_CHECKSUM
+	bool "Enable TinyProto checksum support"
+	help
+	  Enable checksum support in TinyProto.
+
+config TINYPROTO_ERROR_DET_FCS16
+	bool "Enable TinyProto FCS16 support"
+	help
+	  Enable FCS16 support in TinyProto.
+
+config TINYPROTO_ERROR_DET_FCS32
+	bool "Enable TinyProto FCS32 support"
+	help
+	  Enable FCS32 support in TinyProto.
+
+endchoice
+
+endif # TINYPROTO 
